@@ -31,7 +31,8 @@ const closeModal = document.querySelector(".close");
 
 /* 👉 Replace with your Render backend URL */
 const BACKEND_URL =
-  "https://alt-text-generator.onrender.com/generate-alt-text";
+  "https://alttextgenerator-qfqz.onrender.com/generate-alt-text";
+
 
 /* ===============================
    UPLOAD HANDLING
