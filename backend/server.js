@@ -5,10 +5,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 /* ===============================
-   HARD CORS (NO FAIL POSSIBLE)
+   HARD CORS (NO FAILURE POSSIBLE)
 ================================ */
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -36,16 +36,12 @@ app.get("/", (req, res) => {
 });
 
 /* ===============================
-   MAIN ROUTE
+   MAIN API ROUTE
 ================================ */
 app.post("/generate-alt-text", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "Image missing" });
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "API key missing" });
     }
 
     const base64Image = req.file.buffer.toString("base64");
@@ -63,7 +59,7 @@ app.post("/generate-alt-text", upload.single("image"), async (req, res) => {
           {
             role: "system",
             content:
-              "You are an accessibility expert. Describe only what is visible. Start with an article. Avoid guessing."
+              "You are an accessibility expert. Describe only what is visible. Start with an article."
           },
           {
             role: "user",
@@ -94,6 +90,7 @@ app.post("/generate-alt-text", upload.single("image"), async (req, res) => {
       altText,
       length: altText.length
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
