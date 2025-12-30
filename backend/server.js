@@ -7,24 +7,63 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+/* ===============================
+   CORS CONFIGURATION (IMPORTANT)
+================================ */
+
+/* 👉 Replace with your Vercel domain */
+const allowedOrigins = [
+  "https://alttextgenerator.vercel.app",
+  "http://localhost:3000"
+];
 
 app.use(
   cors({
-    origin: [
-      "https://alttextgenerator.vercel.app"
-    ],
-    methods: ["POST", "GET"],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
   })
 );
 
+/* Preflight support */
+app.options("*", cors());
+
+/* ===============================
+   MIDDLEWARE
+================================ */
+
 app.use(express.json());
 
-/**
- * POST: Generate Alt Text with REAL image understanding
- */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10 MB
+  }
+});
+
+/* ===============================
+   HEALTH CHECK
+================================ */
+
+app.get("/", (req, res) => {
+  res.send("Alt Text Generator backend with vision is running");
+});
+
+/* ===============================
+   MAIN ROUTE
+================================ */
+
 app.post("/generate-alt-text", upload.single("image"), async (req, res) => {
   try {
     const { contextText, rules } = req.body;
@@ -34,27 +73,26 @@ app.post("/generate-alt-text", upload.single("image"), async (req, res) => {
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "OpenAI API key missing" });
+      return res.status(500).json({ error: "OpenAI API key not configured" });
     }
 
-    // Convert image to base64
-    const imageBase64 = req.file.buffer.toString("base64");
+    /* Convert image to base64 */
+    const base64Image = req.file.buffer.toString("base64");
     const mimeType = req.file.mimetype;
 
-    /**
-     * Core rules – force visual accuracy
-     */
+    /* Core system rules */
     const baseRules = `
 You are an accessibility expert.
 
 Write alt text that clearly and accurately describes ONLY what is visible.
 
 STRICT RULES
-Start with an article
+Start with an article such as a an or the
 Describe only visible objects shapes colors and positions
 No guessing no interpretation no assumptions
 Use American English
 Limit below six hundred characters
+Use shows displays or depicts
 Avoid the word image
 Avoid possibly suggesting and similar words
 Avoid quotes colons semicolons
@@ -68,13 +106,14 @@ USER PROVIDED RULES
 ${rules || "None"}
 `;
 
+    /* Call OpenAI with vision */
     const response = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: "gpt-4.1-mini",
@@ -98,7 +137,7 @@ Describe the visual now.
                 {
                   type: "image_url",
                   image_url: {
-                    url: `data:${mimeType};base64,${imageBase64}`
+                    url: `data:${mimeType};base64,${base64Image}`
                   }
                 }
               ]
@@ -112,14 +151,16 @@ Describe the visual now.
     const data = await response.json();
 
     if (!data.choices || !data.choices[0]) {
+      console.error("OpenAI response error:", data);
       return res.status(500).json({ error: "Invalid response from OpenAI" });
     }
 
     let altText = data.choices[0].message.content.trim();
 
-    /**
-     * Automatic validation
-     */
+    /* ===============================
+       AUTOMATIC VALIDATION
+    ================================ */
+
     let warning = "";
 
     if (altText.length > 600) {
@@ -138,6 +179,7 @@ Describe the visual now.
         : "Alt text does not start with an article";
     }
 
+    /* Response */
     res.json({
       altText,
       length: altText.length,
@@ -145,18 +187,15 @@ Describe the visual now.
     });
 
   } catch (error) {
-    console.error("Vision error:", error);
+    console.error("Server error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-/**
- * Health check
- */
-app.get("/", (req, res) => {
-  res.send("Alt Text Generator backend with vision is running");
-});
+/* ===============================
+   START SERVER
+================================ */
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
