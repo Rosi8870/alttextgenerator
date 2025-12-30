@@ -1,96 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Alt Text Generator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<header class="header">
-  <h1>Alt Text Generator</h1>
-  <p>Generate clear and accurate accessibility text</p>
-</header>
+<div class="background"></div>
 
-<main class="layout">
+<main class="wrapper">
 
-  <!-- LEFT PANEL -->
-  <section class="panel generator">
+  <div class="card">
 
-    <!-- Drag & Drop Upload -->
-    <div class="upload-area" id="uploadArea">
-      <input type="file" id="imageInput" accept="image/*">
-      <p>Drag and drop a visual here</p>
-      <span>or click to upload</span>
+    <h1>Alt Text Generator</h1>
+    <p class="subtitle">Clean accessibility-ready alt text</p>
+
+    <!-- Upload -->
+    <div class="upload-box" id="uploadArea">
+      <input type="file" id="imageInput" accept="image/*" />
+      <span>Click or drag an image</span>
     </div>
 
-    <!-- Image Preview -->
-    <div class="preview-container">
-      <img id="previewImage" alt="">
-      <p id="previewText">No file selected</p>
-      <small class="zoom-hint">Click preview to zoom</small>
+    <!-- Preview -->
+    <div class="preview-box">
+      <img id="previewImage" />
+      <span id="previewText">No preview</span>
     </div>
 
+    <!-- Context -->
     <textarea
       id="contextText"
       placeholder="Optional surrounding text"
-      rows="3"
+      rows="4"
     ></textarea>
 
     <button id="generateBtn">Generate Alt Text</button>
 
-    <!-- Spinner -->
-    <div class="spinner" id="spinner"></div>
+    <div id="spinner" class="spinner"></div>
 
-    <h3>Generated Alt Text</h3>
+    <!-- Output -->
+    <textarea
+      id="output"
+      rows="5"
+      placeholder="Generated alt text will appear here"
+      readonly
+    ></textarea>
 
-    <textarea id="output" rows="5" readonly></textarea>
-
-    <div class="tools">
+    <div class="bottom-row">
       <span id="counter">0 / 600</span>
       <button id="copyBtn">Copy</button>
     </div>
 
     <p id="warning" class="warning"></p>
 
-  </section>
-
-  <!-- RIGHT PANEL -->
-  <aside class="panel rules">
-    <h2>Rules</h2>
-
-    <h4>DO</h4>
-    <textarea id="dos" rows="8">
-Start with an article
-Describe only what is visible
-Use American English
-Use below six hundred characters
-Mention colors when significant
-Use shows displays or depicts
-    </textarea>
-
-    <h4>DO NOT</h4>
-    <textarea id="donts" rows="8">
-Do not interpret meaning
-Do not guess unseen details
-Avoid the word image
-Avoid special characters
-Avoid possibly or suggesting
-    </textarea>
-  </aside>
+  </div>
 
 </main>
 
-<footer class="footer">
-  <p>Accessibility focused alt text generator</p>
-</footer>
-
-<!-- Zoom Modal -->
-<div class="modal" id="imageModal">
+<!-- Image Zoom Modal -->
+<div id="imageModal" class="modal">
   <span class="close">&times;</span>
-  <img class="modal-content" id="modalImage">
+  <img id="modalImage" />
 </div>
+
+<!-- Toast -->
+<div id="toast">Alt text copied</div>
 
 <script src="script.js"></script>
 </body>
