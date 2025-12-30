@@ -10,7 +10,16 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const PORT = 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://alttextgenerator.vercel.app"
+    ],
+    methods: ["POST", "GET"],
+    allowedHeaders: ["Content-Type"]
+  })
+);
+
 app.use(express.json());
 
 /**
